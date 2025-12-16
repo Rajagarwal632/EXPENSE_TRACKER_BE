@@ -2,10 +2,12 @@ require("dotenv").config()
 const mongoose = require("mongoose")
 const {userroute} = require("./route/user")
 const express = require("express")
+const { expenseroute } = require("./route/expense")
 const app = express()
 
 app.use(express.json())
 app.use("/user",userroute)
+app.use("/expense",expenseroute)
 
 async function main(){
     await mongoose.connect(process.env.MONGO_URL)

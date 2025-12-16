@@ -17,7 +17,7 @@ const expense = new Schema({
     amount : {type : number , required : true},
     type : {type : String , enum : ["income" , "expense"]},
     category : {type : String , required : true},
-    date : {type : date , required : true},
+    date : {type : String , required : true},
     description : {type : String , required : true}
 })
 
