@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
 const saltround = 10
-const {z, email} = require("zod")
+const {z} = require("zod")
 const JWT_USER = process.env.JWT_USER
 
 mongoose.connect(process.env.MONGO_URL)
@@ -43,6 +43,31 @@ userroute.post("/signup", async function(req,res){
 })
 
 userroute.post("/signin", async function(req,res){
+    const email = req.body.email
+    const password = req.body.password
+
+    const exist_user = await usermodel.findOne({
+        email
+    })
+    if(!exist_user){
+        req.json({
+            msg : "USER NOT EXIST"
+        })
+        return
+    }
+    const password_match = await bcrypt.compare(password,exist_user.password)
+    if(password_match){
+        const token = jwt.sign({
+            userid : exist_user._id 
+        },JWT_USER)
+        res.json({
+            token : token
+        })
+    }else{
+        res.json({
+            msg : "WORNG PASSWORD"
+        })
+    }
 
 })
 
