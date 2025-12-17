@@ -102,6 +102,24 @@ expenseroute.put("/:id" , userauth , async function(req,res){
 
 })
 
+expenseroute.delete("/:id",userauth , async function(req , res){
+    const userid = req.userid
+    const id = req.params.id
+    const delete_data = await expensemodel.findOneAndDelete({
+        userid : userid,
+        _id : id
+    })
+    if(delete_data) {
+        res.json({
+            msg : "DATA DELETED"
+        })
+    }else{
+        res.json({
+            msg : "WRONG CREDENTIALS"
+        })
+    }
+})
+
 module.exports = {
     expenseroute
 }
