@@ -36,7 +36,7 @@ expenseroute.post("/", userauth , async function(req,res){
         amount,
         type,
         category,
-        date : date,
+        date : new Date(date),
         description
     })
     res.json({
@@ -87,7 +87,7 @@ expenseroute.put("/:id" , userauth , async function(req,res){
         amount,
         category,
         description,
-        date,
+        date : new Date(date),
         type
     })
     if(update){
@@ -150,6 +150,8 @@ expenseroute.get("/category" , userauth , async function(req,res){
         summary : result
     })
 })
+
+
 
 module.exports = {
     expenseroute
