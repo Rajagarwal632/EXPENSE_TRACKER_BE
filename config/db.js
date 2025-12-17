@@ -14,10 +14,10 @@ const user = new Schema({
 
 const expense = new Schema({
     userid : {type : objectid , required:true , ref : "user"},
-    amount : {type : number , required : true},
+    amount : {type : Number , required : true},
     type : {type : String , enum : ["income" , "expense"]},
     category : {type : String , required : true},
-    date : {type : String , required : true},
+    date : {type : Date , required : true},
     description : {type : String , required : true}
 })
 
