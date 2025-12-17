@@ -151,7 +151,43 @@ expenseroute.get("/category" , userauth , async function(req,res){
     })
 })
 
+expenseroute.get("/date", userauth, async function(req,res){
+    const userid = req.userid
+    const year_month = req.query.month
+    if (!year_month) {
+        return res.json({ msg: "month is required (YYYY-MM)" });
+    }
+    const [year,month] = year_month.split("-")
+    const start_date = new Date(Date.UTC(year,month-1,1))
+    const end_date = new Date(Date.UTC(year , month,1))
 
+    const match  = {
+        userid : new mongoose.Types.ObjectId(userid),
+        date : {"$gte" : start_date , "$lt" : end_date}
+    }
+    const result = await expensemodel.aggregate([{
+        $match : match
+    },{
+        $group : {
+            _id  : "$type",
+            total : {$sum : "$amount"}
+        }
+    }
+    ])
+    let income = 0
+    let expense = 0
+    result.forEach(item => {
+        if(item._id == "income") income = item.total;
+        if(item._id == "expense") expense = item.total;
+    })
+    let balance = income - expense
+    res.json({
+        month: year_month,
+        income,
+        expense,
+        balance
+    });
+})
 
 module.exports = {
     expenseroute
