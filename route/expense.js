@@ -44,6 +44,18 @@ expenseroute.post("/", userauth , async function(req,res){
     })
 })
 
+expenseroute.get("/",userauth,async function(req,res){
+    const userid = req.userid
+
+    const data = await expensemodel.find({
+        userid
+    })
+    res.json({
+        msg : "LIST - : ",
+        data
+    })
+})
+
 module.exports = {
     expenseroute
 }
