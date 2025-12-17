@@ -182,11 +182,114 @@ expenseroute.get("/date", userauth, async function(req,res){
     })
     let balance = income - expense
     res.json({
+        msg : "SUMMARY",
         month: year_month,
         income,
         expense,
         balance
     });
+})
+
+expenseroute.get("/report" , userauth , async function(req,res){
+    const userid = new mongoose.Types.ObjectId(req.userid)
+    const month = Number(req.query.month)||6
+    //1 OVERALL SUMMARY - INCOME , EXPENSE , BALANCE
+   const overall = await expensemodel.aggregate([{
+    $match : {userid}
+   },{
+    $group : {
+        _id : "$type",
+        total : {$sum : "$amount"}
+    }
+   }])
+   let total_income = 0
+    let total_expense = 0
+    overall.forEach(item => {
+        if(item._id == "income") total_income = item.total;
+        if(item._id == "expense") total_expense = item.total;
+    })
+    let total_balance = total_income - total_expense
+
+    //3 CATEGORY WISE EXPENSE
+    const match = {
+ 
+        userid : userid,
+        type : "expense"
+    }
+
+    const category_breakdown = await expensemodel.aggregate([{
+        $match : match
+    },{
+        $group : {
+            _id : "$category",
+            total : {$sum : "$amount"}
+        }
+    },{
+        $sort : {total : -1}
+    }])
+
+    //2 MONTHLY REPORT GENERATION
+    const startDate = new Date()
+    startDate.setMonth(startDate.getMonth() - month)
+
+    const monthly_raw = await expensemodel.aggregate([
+        {
+            $match: {
+                userid: userid,
+                date: { $gte: startDate }
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    year: { $year: "$date" },
+                    month: { $month: "$date" },
+                    type: "$type"
+                },
+                total: { $sum: "$amount" }
+            }
+        },
+        {
+            $sort: {
+                "_id.year": 1,
+                "_id.month": 1
+            }
+        }
+    ])
+
+    // raw data ko clean format me convert karna
+    const monthly_map = {}
+
+    monthly_raw.forEach(item => {
+        const key = `${item._id.year}-${item._id.month}`
+
+        if (!monthly_map[key]) {
+            monthly_map[key] = {
+                month: key,
+                income: 0,
+                expense: 0
+            }
+        }
+
+        monthly_map[key][item._id.type] = item.total
+    })
+
+    const monthly_report = Object.values(monthly_map)
+
+
+    // =========================
+    // FINAL RESPONSE
+    // =========================
+    res.json({
+        msg : "TOTAL SUMMARY",
+        overall: {
+            income: total_income,
+            expense: total_expense,
+            balance: total_balance
+        },
+        monthlyReport: monthly_report,
+        categoryBreakdown: category_breakdown
+    })
 })
 
 module.exports = {
