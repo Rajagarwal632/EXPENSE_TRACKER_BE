@@ -120,6 +120,37 @@ expenseroute.delete("/:id",userauth , async function(req , res){
     }
 })
 
+expenseroute.get("/category" , userauth , async function(req,res){
+    const userid = req.userid
+    console.log("REQ.USERID =", req.userid);
+
+    const field = req.query.q
+    const match = {
+        //isko type cast krna hi hoga warna auth jo h wo string bhejta h userid me 
+        //find() isiliy chalta kyuki schema bol raha hai userId ObjectId hai 
+        // chal string ko ObjectId bana deta hoon
+        //but aggregate() me no auto casting  so need to typecast 
+        userid : new mongoose.Types.ObjectId(userid),
+        type : "expense"
+    }
+    console.log("MATCH OBJECT =", match);
+
+    if(field){
+        match.category = field
+    }
+    const result = await expensemodel.aggregate([{
+        $match : match
+    },{
+        $group : {
+            _id : "$category",
+            total : {$sum : "$amount"}
+        }
+    }])
+    res.json({
+        summary : result
+    })
+})
+
 module.exports = {
     expenseroute
 }
